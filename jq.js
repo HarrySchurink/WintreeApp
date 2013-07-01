@@ -26,6 +26,8 @@ custdetail.longitude = '';
 custdetail.latitude = '';
 var customers = [];
 
+var alerten = 'J';
+
 var transactionCount = 0;
 var transactionProcessing = 0;
 var wsrowcount = 0;
@@ -64,13 +66,13 @@ var app = {
         listeningElement.setAttribute('style', 'display:none;');
         receivedElement.setAttribute('style', 'display:block;');
 
-        console.log('Received Event: ' + id);
+        console_log('Received Event: ' + id);
     },
     scan: function() {
-        console.log('scanning');
+        console_log('scanning');
         try {
             window.plugins.barcodeScanner.scan(function(args) {
-                console.log("Scanner result: \n" +
+                console_log("Scanner result: \n" +
                     "text: " + args.text + "\n" +
                     "format: " + args.format + "\n" +
                     "cancelled: " + args.cancelled + "\n");
@@ -80,10 +82,10 @@ var app = {
                 }
                 */
                 document.getElementById("info").innerHTML = args.text;
-                console.log(args);
+                console_log(args);
         });
         } catch (ex) {
-            console.log(ex.message);
+            console_log(ex.message);
         }
     }
 
@@ -164,7 +166,7 @@ $(document).ready(function() {
 
 function countWs() { 
 
-	console.log('countWs('+wscurpage+')');
+	console_log('countWs('+wscurpage+')');
 
 	var params = new Object();
 	//Algemene paramters (uit de settings dus)
@@ -197,7 +199,7 @@ function countWs() {
 } 
 
 function countWsCallback(data) {
-	console.log('countWsCallback()');
+	console_log('countWsCallback()');
 	var row = data.row[0];
 	wsrowcount = row.rows;	
 	wspages = 5;
@@ -214,7 +216,7 @@ function processWs() {
 		ListDBValues();
 		return;
 	}
-	console.log('processWs('+wscurpage+')');
+	console_log('processWs('+wscurpage+')');
 	var params = new Object();
 	//Algemene paramters (uit de settings dus)
 	params.loginip = guo_app.loginip;
@@ -247,7 +249,7 @@ function processWsCallback(data) {
 
 	wscurpage = wscurpage + 1;
 
-	console.log('processWsCallback('+wscurpage+')');
+	console_log('processWsCallback('+wscurpage+')');
 	
 	if ( wscurpage  <= wspages + 1) {
 		AddAllCustToDB(data);
@@ -262,7 +264,7 @@ function processWsCallback(data) {
 
 
 function ajaxCallFailed(error) {
-	console.log('ajaxCallFailed()');
+	console_log('ajaxCallFailed()');
 	waitOff();
 }
 
@@ -296,14 +298,14 @@ function deviceInfo() {
 
 // this is called when an error happens in a transaction
 function errorHandler(transaction, error) {
-	console.log('errorHandler()');
+	console_log('errorHandler()');
 
 	alert('Error: ' + error.message + ' code: ' + error.code);
 }
  
 // this is called when a successful transaction happens
 function successCallBack() {
-	console.log('successCallBack()');
+	console_log('successCallBack()');
 
 	//alert("DEBUGGING: success");
 }
@@ -314,7 +316,7 @@ function successCallBack() {
  
 // called when the application loads
 function onDbLoad(){
-	console.log('onDbLoad()');
+	console_log('onDbLoad()');
 
 	 
 	// This alert is used to make sure the application is loaded correctly
@@ -340,13 +342,13 @@ function onDbLoad(){
 }
 
 function sqlCallbackClear(){
-	console.log('sqlCallbackClear()');
+	console_log('sqlCallbackClear()');
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
  
 function ListDBValues() {
-	console.log('ListDBValues()');
+	console_log('ListDBValues()');
 
 // list the values in the database to the screen using jquery to update the #lbUsers element
  
@@ -381,7 +383,7 @@ function ListDBValues() {
 
 function listDbHandler(){
 	waitOff();
-	console.log('listDbHandler()');
+	console_log('listDbHandler()');
 };
 
 
@@ -389,7 +391,7 @@ function listDbHandler(){
 
 function AddAllCustToDB(data) {
 
-	console.log('AddAllCustToDB(start)');
+	console_log('AddAllCustToDB(start)');
  
 	if (!window.openDatabase) {
 		alert('Databases are not supported in this browser.');
@@ -401,7 +403,7 @@ function AddAllCustToDB(data) {
 
 		//var head = $("#headerteller");
 		waitMsg('Start processing data');
-		console.log('Start processing data');
+		console_log('Start processing data');
 		transactionProcessing = 0;
 		$.each(data.row, function(index, item) {
 			transactionProcessing = transactionProcessing + 1;
@@ -416,7 +418,7 @@ function AddAllCustToDB(data) {
 		//alert('adsf');
 	});
 	
-	console.log('AddAllCustToDB(stop)');
+	console_log('AddAllCustToDB(stop)');
  
 	return false;
  
@@ -424,7 +426,7 @@ function AddAllCustToDB(data) {
 
 function sqlCallbackSync(){
 	
-	console.log('sqlCallbackSync()');
+	//console_log('sqlCallbackSync()');
 	transactionProcessing = transactionProcessing - 1;
 	waitMsg('Processing data: ' + transactionProcessing);
 	
@@ -482,11 +484,19 @@ function waitOn() {
 
 function waitOff() {
 	$('#waitbox').hide();
-	console.log('Klaar en wegweze');
+	console_log('Klaar en wegweze');
 }
 
 function waitMsg(msg) {
 	//$('#waitbox').show();
 	$('#waitmsg').html(msg);
 	
+}
+
+function console_log(msg) {
+	if (alerten == 'J') {
+		alert(msg);
+	} else {
+		console.log(msg);
+	}
 }
