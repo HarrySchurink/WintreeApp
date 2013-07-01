@@ -183,7 +183,7 @@ function countWs() {
 
 	//alert(guo_app.proxy);
 	waitOn();
-	waitMsg('Retrieving webservice [counting]...');
+	waitMsg('Counting webservice ...');
 	$.ajax({
 		type: "get", 
 		url: guo_app.proxy,
@@ -355,10 +355,8 @@ function ListDBValues() {
 		return;
 	}
 	
-	loadingOn();
-	
 	db.transaction(function(transaction) {
-		transaction.executeSql('SELECT * FROM User ORDER by contactname desc LIMIT 100;', 
+		transaction.executeSql('SELECT * FROM User ORDER by contactname LIMIT 100;', 
 		[],
 		function(transaction, result) {
 			if (result != null && result.rows != null) {
@@ -383,7 +381,6 @@ function ListDBValues() {
 
 function listDbHandler(){
 	waitOff();
-	loadingOff();
 	console.log('listDbHandler()');
 };
 
@@ -479,15 +476,6 @@ function retrieveCustDetails(relid) {
 }
 
 		
-function loadingOn() {
-	$.mobile.showPageLoadingMsg();
-}
-
-function loadingOff() {
-	$.mobile.hidePageLoadingMsg();
-}
-
-
 function waitOn() {
 	$('#waitbox').show();
 }
