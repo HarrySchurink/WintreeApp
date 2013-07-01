@@ -26,7 +26,7 @@ custdetail.longitude = '';
 custdetail.latitude = '';
 var customers = [];
 
-var alerten = 'J';
+var alerten = 'N';
 
 var transactionCount = 0;
 var transactionProcessing = 0;
@@ -222,7 +222,7 @@ function processWs() {
 	params.loginip = guo_app.loginip;
 	params.loginusername = guo_app.loginusername;
 	params.loginpassword = guo_app.loginpassword;
-	params.commandid = 'contacts_get';
+	params.commandid = 'contacts';
 	params.page = wscurpage;
 	params.limit = wspagesize;
 //	params.params = '?selection=228&ai_page=1&ai_limit='+guo_app.maxrows;
@@ -456,7 +456,6 @@ function retrieveCustDetails(relid) {
 						
 					if (result != null && result.rows != null) {
 						var row = result.rows.item(0);
-						alert('sql callback ' + row.UserId);
 						custdetail.id 		= row.UserId;
 						//custdetail.sort		= customers[$(this).attr('rel')]['sort'];
 						custdetail.contactname		= row.contactname;
