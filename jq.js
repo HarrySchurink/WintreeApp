@@ -4,7 +4,7 @@ guo_app.proxy = '';
 guo_app.loginusername = '';
 guo_app.loginpassword = '';
 guo_app.loginip = '';
-guo_app.maxrows = 5000;
+guo_app.maxrows = 100000;
 
 
 // global variables
