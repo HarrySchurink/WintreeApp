@@ -240,7 +240,7 @@ function onDeviceReady() {
 }
 function initGlobals() {
 	if (!window.localStorage.getItem("guo_app.loginip")) {
-		window.localStorage.setItem("guo_app.loginip", 'wstest.wintreemobile.nl:4496/ws_test/ws_AWC_sp_');
+		window.localStorage.setItem("guo_app.loginip", 'wstsd.wintreemobile.nl:4496/ws_tsd99/ws_AWC_sp_contacts_get');
 	}
 	if (!window.localStorage.getItem("guo_app.proxy")) {
 		window.localStorage.setItem("guo_app.proxy", 'https://www.treecommerce.net/WintreeApp/callback.php?callback=?');
