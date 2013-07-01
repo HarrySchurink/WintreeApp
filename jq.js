@@ -4,7 +4,7 @@ guo_app.proxy = '';
 guo_app.loginusername = '';
 guo_app.loginpassword = '';
 guo_app.loginip = '';
-guo_app.maxrows = 100000;
+guo_app.maxrows = 5000;
 
 
 // global variables
@@ -26,7 +26,8 @@ custdetail.longitude = '';
 custdetail.latitude = '';
 var customers = [];
 
-
+var transactionCount = 0;
+var transactionProcessing = 0;
 
 document.addEventListener("deviceready", deviceInfo, false);
 
@@ -194,9 +195,13 @@ function customerSearch() /*Add parameters and what not*/ {
 		error: ajaxCallFailed,
 		failure: ajaxCallFailed
 	}); 
+	
+
+
 } 
 
 function customerSearchResult(data) {
+	console.log('customerSearchResult()');
 	var html ='';
 	if (data.errortxt) {
 		alert('Error: (' + data.errorno + ') ' +data.errortxt);
@@ -208,7 +213,7 @@ function customerSearchResult(data) {
 
 
 function ajaxCallFailed(error) {
-	alert('Ajaxcall Failed');
+	console.log('ajaxCallFailed()');
 	waitOff();
 }
 
@@ -242,20 +247,34 @@ function deviceInfo() {
 
 // this is called when an error happens in a transaction
 function errorHandler(transaction, error) {
+	console.log('errorHandler()');
+
 	alert('Error: ' + error.message + ' code: ' + error.code);
 }
  
 // this is called when a successful transaction happens
 function successCallBack() {
+	console.log('successCallBack()');
+
 	//alert("DEBUGGING: success");
 }
+
  
-function nullHandler(){
-	//	alert('nullhandler()');
+function listDbHandler(){
+	console.log('listDbHandler()');
+
+};
+
+function sqlCallbackClear(){
+	console.log('sqlCallbackClear()');
+	//if (count = rowcount 
+
 };
  
 // called when the application loads
 function onDbLoad(){
+	console.log('onDbLoad()');
+
 	 
 	// This alert is used to make sure the application is loaded correctly
 	// you can comment this out once you have the application working
@@ -271,13 +290,17 @@ function onDbLoad(){
 	db = openDatabase(shortName, version, displayName,maxSize);
 	 
 	db.transaction(function(tx){
-		tx.executeSql( 'DROP TABLE IF EXISTS User', [],nullHandler,errorHandler);
-		tx.executeSql( 'CREATE TABLE IF NOT EXISTS User(UserId INTEGER NOT NULL PRIMARY KEY, contactname TEXT NOT NULL, city TEXT NOT NULL, sort TEXT NOT NULL, phone1 TEXT NOT NULL, email TEXT NOT NULL, longitude TEXT NOT NULL, latitude TEXT NOT NULL)', [],nullHandler,errorHandler);
+		tx.executeSql( 'DROP TABLE IF EXISTS User', [],sqlCallbackClear,errorHandler);
+		tx.executeSql( 'CREATE TABLE IF NOT EXISTS User(UserId INTEGER NOT NULL PRIMARY KEY, contactname TEXT NOT NULL, city TEXT NOT NULL, sort TEXT NOT NULL, phone1 TEXT NOT NULL, email TEXT NOT NULL, longitude TEXT NOT NULL, latitude TEXT NOT NULL)', [],sqlCallbackClear,errorHandler);
+		tx.executeSql( 'DELETE FROM User', [],sqlCallbackClear,errorHandler);
+
 	},errorHandler,successCallBack);
 	 
 }
  
 function ListDBValues() {
+	console.log('ListDBValues()');
+
 // list the values in the database to the screen using jquery to update the #lbUsers element
  
 	if (!window.openDatabase) {
@@ -313,49 +336,13 @@ function ListDBValues() {
 			}
 		},
 		errorHandler);
-		},errorHandler,nullHandler);
+		},errorHandler,listDbHandler);
 	return;
  
 }
  
-// this is the function that puts values into the database using the values from the text boxes on the screen
-function AddValueToDB() {
- 
-	if (!window.openDatabase) {
-	alert('Databases are not supported in this browser.');
-	return;
-	}
- 
-	// this is the section that actually inserts the values into the User table
-	db.transaction(function(transaction) {
-	//transaction.executeSql('INSERT INTO User(contactname, city)VALUES (?,?)',[$('#txcontactname').val(), $('#txcity').val()],nullHandler,errorHandler);
-	transaction.executeSql('INSERT INTO User(contactname, city)VALUES (?,?)',[$('#txcontactname').val(), $('#txcity').val()],nullHandler,errorHandler);
-	});
-	 
-	// this calls the function that will show what is in the User table in the database
-	ListDBValues();
-	 
-	return false;
-	 
-}
-
-function AddCustToDB(ls_contactname, ls_city) {
- 
-	if (!window.openDatabase) {
-		alert('Databases are not supported in this browser.');
-		return;
-	}
-	 
-	db.transaction(function(transaction) {
-		transaction.executeSql('INSERT INTO User(contactname, city)VALUES (?,?)',[ls_contactname, ls_city],nullHandler,errorHandler);
-	});
-	 
-	 
-	return false;
- 
-}
-
 function AddAllCustToDB(data) {
+	console.log('AddAllCustToDB(start)');
  
 	if (!window.openDatabase) {
 		alert('Databases are not supported in this browser.');
@@ -366,13 +353,12 @@ function AddAllCustToDB(data) {
 
 		//var head = $("#headerteller");
 		waitMsg('Start processing data');
-		tx.executeSql( 'DROP TABLE IF EXISTS User', [],nullHandler,errorHandler);
-		tx.executeSql( 'CREATE TABLE IF NOT EXISTS User(UserId INTEGER NOT NULL PRIMARY KEY, contactname TEXT NOT NULL, city TEXT NOT NULL, sort TEXT NOT NULL, phone1 TEXT NOT NULL, email TEXT NOT NULL, longitude TEXT NOT NULL, latitude TEXT NOT NULL)', [],nullHandler,errorHandler);
-		tx.executeSql( 'DELETE FROM User', [],nullHandler,errorHandler);
-		var teller = 0;
+		transactionProcessing = 0;
 		$.each(data.row, function(index, item) {
-			waitMsg('Start processing data' + teller);
+			transactionProcessing = transactionProcessing + 1;
+			
 			//console.log(teller);
+			/*
 			customers[teller] = [];
 			customers[teller]['id'] = item.id;
 			customers[teller]['sort'] = item.sort;
@@ -382,38 +368,35 @@ function AddAllCustToDB(data) {
 			customers[teller]['email'] = item.email;
 			customers[teller]['longitude'] = item.longitude;
 			customers[teller]['latitude'] = item.latitude;
+			*/
 			
-			//AddCustToDB(item.contactname,  item.city)
-			tx.executeSql('INSERT INTO User(UserId, contactname, city, sort, phone1, email, longitude, latitude)VALUES (?,?,?,?,?,?,?,?)',[item.id, item.contactname, item.city, item.sort, item.phone1, item.email, item.longitude, item.latitude],nullHandler,errorHandler);
-			
-			teller = teller + 1;
+			tx.executeSql('INSERT INTO User(UserId, contactname, city, sort, phone1, email, longitude, latitude)VALUES (?,?,?,?,?,?,?,?)',
+							[item.id, item.contactname, item.city, item.sort, item.phone1, item.email, item.longitude, item.latitude],
+							sqlCallbackSync,
+							errorHandler
+						);
 		});
 		
 		//alert('adsf');
-		ListDBValues();
 	});
 	
-	 
+	console.log('AddAllCustToDB(stop)');
+ 
 	return false;
  
 }
 
-
-function emptyCustDB() {
- 
-	if (!window.openDatabase) {
-		alert('Databases are not supported in this browser.');
-		return;
+function sqlCallbackSync(){
+	//console.log('sqlCallbackSync()');
+	transactionProcessing = transactionProcessing - 1;
+	waitMsg('Start processing data: ' + transactionProcessing);
+	
+	if (transactionProcessing == 0) {
+		ListDBValues();
 	}
-	 
-	db.transaction(function(transaction) {
-		transaction.executeSql('DELETE from User',[],nullHandler,errorHandler);
-	});
-	ListDBValues();
-	 
-	return false;
-	 
-}
+
+};
+
 
 function waitOn() {
 	$('#waitbox').show();
