@@ -4,7 +4,7 @@ guo_app.proxy = '';
 guo_app.loginusername = '';
 guo_app.loginpassword = '';
 guo_app.loginip = '';
-guo_app.maxrows = 5000;
+guo_app.maxrows = 10000;
 
 
 // global variables
@@ -28,6 +28,10 @@ var customers = [];
 
 var transactionCount = 0;
 var transactionProcessing = 0;
+var wsrowcount = 0;
+var wspages = 0;
+var wscurpage = 0;
+var wspagesize = 0;
 
 document.addEventListener("deviceready", deviceInfo, false);
 
@@ -107,16 +111,15 @@ $(document).ready(function() {
 		$('#proxy').val(guo_app.proxy);
 	});
 	$( '#custdetail' ).live( 'pagebeforeshow',function(event){
-		if (custdetail.id == 0 ) {
+		if (custdetail.id == 10 ) {
 			$.mobile.changePage('#subone');
 			return;
 		} else {
-			//$('#customerdetails').html(custdetail.id + '<br />'+custdetail.sort+'<br />'+custdetail.city+'<br />'+custdetail.phone1+'<br />'+custdetail.email);
+		
 			$('#customerid_t').html(custdetail.id);
 			$('#customersort_t').html(custdetail.contactname);
 			$('#customercity_t').html(custdetail.city);
 			$('#customerphone1_t').html(custdetail.phone1);
-			//$('#customeremail').val(custdetail.email);
 			$("#customeremail").attr("href", "mailto:" + custdetail.email);
 			$("#customeremail").html("Email " + custdetail.email);
 			$("#customeremail_t").html(  custdetail.email);
@@ -131,14 +134,8 @@ $(document).ready(function() {
 	
 	
 	$("#ul_klanten").on("click", ".custlink", function() { 
-		custdetail.id 		= customers[$(this).attr('rel')]['id'];
-		custdetail.sort		= customers[$(this).attr('rel')]['sort'];
-		custdetail.contactname		= customers[$(this).attr('rel')]['contactname'];
-		custdetail.city 	= customers[$(this).attr('rel')]['city'];
-		custdetail.phone1 	= customers[$(this).attr('rel')]['phone1'];
-		custdetail.email 	= customers[$(this).attr('rel')]['email'];
-		custdetail.longitude 	= customers[$(this).attr('rel')]['longitude'];
-		custdetail.latitude 	= customers[$(this).attr('rel')]['latitude'];
+		retrieveCustDetails($(this).attr('rel'));
+		return false;
 	} );
 	
 	
@@ -157,23 +154,24 @@ $(document).ready(function() {
 	})
       
 	$("#getws2").on( 'click',  function(event) {
-		customerSearch();
+		countWs();
 	})
 	
 	onDbLoad();
 	waitOff();
 })
    
-function customerSearch() /*Add parameters and what not*/ { 
+
+function countWs() { 
+
+	console.log('countWs('+wscurpage+')');
 
 	var params = new Object();
 	//Algemene paramters (uit de settings dus)
 	params.loginip = guo_app.loginip;
 	params.loginusername = guo_app.loginusername;
 	params.loginpassword = guo_app.loginpassword;
-	//parameters bij deze  call; bv via parameters in deze functie..
-	params.commandid = 'contacts';
-	params.commandid = '';
+	params.commandid = 'contacts_count';
 	//params.viewid = '';
 	params.page = '1';
 	params.limit = '50';
@@ -182,31 +180,82 @@ function customerSearch() /*Add parameters and what not*/ {
 	//Omzettten naar json string
 	var jparams = JSON.stringify(params);
 	
-//alert(guo_app.proxy);
+
+	//alert(guo_app.proxy);
 	waitOn();
-	waitMsg('Retrieving webservice ...');
+	waitMsg('Retrieving webservice [counting]...');
 	$.ajax({
 		type: "get", 
 		url: guo_app.proxy,
 		data: {'jsonparams':jparams},
 		dataType: "jsonp",
 		contentType: "application/json; charset=utf-8",
-		success : customerSearchResult,
+		success : countWsCallback,
 		error: ajaxCallFailed,
 		failure: ajaxCallFailed
 	}); 
-	
-
-
 } 
 
-function customerSearchResult(data) {
-	console.log('customerSearchResult()');
-	var html ='';
-	if (data.errortxt) {
-		alert('Error: (' + data.errorno + ') ' +data.errortxt);
-	} else {
+function countWsCallback(data) {
+	console.log('countWsCallback()');
+	var row = data.row[0];
+	wsrowcount = row.rows;	
+	wspages = 5;
+	wspagesize = wsrowcount / wspages;
+	wspagesize = Math.ceil(wspagesize);
+	wscurpage = 1;
+	processWs();
+}
+
+/////////////////////////////////////////////////////////////////////////
+
+function processWs() { 
+	if (wscurpage > wspages) {
+		ListDBValues();
+		return;
+	}
+	console.log('processWs('+wscurpage+')');
+	var params = new Object();
+	//Algemene paramters (uit de settings dus)
+	params.loginip = guo_app.loginip;
+	params.loginusername = guo_app.loginusername;
+	params.loginpassword = guo_app.loginpassword;
+	params.commandid = 'contacts_get';
+	params.page = wscurpage;
+	params.limit = wspagesize;
+//	params.params = '?selection=228&ai_page=1&ai_limit='+guo_app.maxrows;
+	params.params = '?ai_page='+wscurpage+'&ai_limit='+wspagesize;
+	var jparams = JSON.stringify(params);
+	
+
+	//alert(guo_app.proxy);
+	waitOn();
+	waitMsg('Retrieving: ' + ( (wscurpage-1)  * (100 / wspages) )  +'-'  + ( wscurpage  * (100 / wspages) )  +'%');
+	$.ajax({
+		type: "get", 
+		url: guo_app.proxy,
+		data: {'jsonparams':jparams},
+		dataType: "jsonp",
+		contentType: "application/json; charset=utf-8",
+		success : processWsCallback,
+		error: ajaxCallFailed,
+		failure: ajaxCallFailed
+	}); 
+} 
+
+function processWsCallback(data) {
+
+	wscurpage = wscurpage + 1;
+
+	console.log('processWsCallback('+wscurpage+')');
+	
+	if ( wscurpage  <= wspages + 1) {
 		AddAllCustToDB(data);
+		
+	} else {
+
+		ListDBValues();
+		
 	}
 
 }
@@ -260,16 +309,8 @@ function successCallBack() {
 }
 
  
-function listDbHandler(){
-	console.log('listDbHandler()');
 
-};
 
-function sqlCallbackClear(){
-	console.log('sqlCallbackClear()');
-	//if (count = rowcount 
-
-};
  
 // called when the application loads
 function onDbLoad(){
@@ -294,9 +335,15 @@ function onDbLoad(){
 		tx.executeSql( 'CREATE TABLE IF NOT EXISTS User(UserId INTEGER NOT NULL PRIMARY KEY, contactname TEXT NOT NULL, city TEXT NOT NULL, sort TEXT NOT NULL, phone1 TEXT NOT NULL, email TEXT NOT NULL, longitude TEXT NOT NULL, latitude TEXT NOT NULL)', [],sqlCallbackClear,errorHandler);
 		tx.executeSql( 'DELETE FROM User', [],sqlCallbackClear,errorHandler);
 
-	},errorHandler,successCallBack);
+		},errorHandler,successCallBack);
 	 
 }
+
+function sqlCallbackClear(){
+	console.log('sqlCallbackClear()');
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
  
 function ListDBValues() {
 	console.log('ListDBValues()');
@@ -307,13 +354,9 @@ function ListDBValues() {
 		alert('Databases are not supported in this browser.');
 		return;
 	}
-	 
-	// this line clears out any content in the #lbUsers element on the page so that the next few lines will show updated
-	// content and not just keep repeating lines
-	$('#lbUsers').html('');
-	 
-	// this next section will select all the content from the User table and then go through it row by row
-	// appending the UserId company city to the #lbUsers element on the page
+	
+	loadingOn();
+	
 	db.transaction(function(transaction) {
 		transaction.executeSql('SELECT * FROM User ORDER by contactname desc LIMIT 100;', 
 		[],
@@ -322,8 +365,7 @@ function ListDBValues() {
 				var html='';
 				for (var i = 0; i < result.rows.length; i++) {
 					var row = result.rows.item(i);
-					//$('#lbUsers').append('<br>' + row.UserId + '. ' + row.contactname+ ' ' + row.city);
-					html += '<li ><a class="custlink" data-transition="slide" rel="'+row.UserId+'" href="#custdetail">'+row.contactname+ ' | ' + row.city + '</a></li>';
+					html += '<li ><a class="custlink" data-transition="slide" rel="'+row.UserId+'" href="#custdetail">'+row.contactname+ ' | ' + row.city + ' ['+row.UserId+']</a></li>';
 
 				}
 				$("#ul_klanten").empty();
@@ -331,8 +373,6 @@ function ListDBValues() {
 				$('#ul_klanten').trigger('create');    
 				$('#ul_klanten').listview('refresh');
 				
-				//alert('looped' + i);
-				waitOff();
 			}
 		},
 		errorHandler);
@@ -340,8 +380,18 @@ function ListDBValues() {
 	return;
  
 }
- 
+
+function listDbHandler(){
+	waitOff();
+	loadingOff();
+	console.log('listDbHandler()');
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 function AddAllCustToDB(data) {
+
 	console.log('AddAllCustToDB(start)');
  
 	if (!window.openDatabase) {
@@ -349,27 +399,16 @@ function AddAllCustToDB(data) {
 		return;
 	}
 	 
+	
 	db.transaction(function(tx) {
 
 		//var head = $("#headerteller");
 		waitMsg('Start processing data');
+		console.log('Start processing data');
 		transactionProcessing = 0;
 		$.each(data.row, function(index, item) {
 			transactionProcessing = transactionProcessing + 1;
-			
-			//console.log(teller);
-			/*
-			customers[teller] = [];
-			customers[teller]['id'] = item.id;
-			customers[teller]['sort'] = item.sort;
-			customers[teller]['contactname'] = item.contactname;
-			customers[teller]['city'] = item.city;
-			customers[teller]['phone1'] = item.phone1;
-			customers[teller]['email'] = item.email;
-			customers[teller]['longitude'] = item.longitude;
-			customers[teller]['latitude'] = item.latitude;
-			*/
-			
+					
 			tx.executeSql('INSERT INTO User(UserId, contactname, city, sort, phone1, email, longitude, latitude)VALUES (?,?,?,?,?,?,?,?)',
 							[item.id, item.contactname, item.city, item.sort, item.phone1, item.email, item.longitude, item.latitude],
 							sqlCallbackSync,
@@ -387,15 +426,66 @@ function AddAllCustToDB(data) {
 }
 
 function sqlCallbackSync(){
-	//console.log('sqlCallbackSync()');
+	
+	console.log('sqlCallbackSync()');
 	transactionProcessing = transactionProcessing - 1;
-	waitMsg('Start processing data: ' + transactionProcessing);
+	waitMsg('Processing data: ' + transactionProcessing);
 	
 	if (transactionProcessing == 0) {
-		ListDBValues();
+		waitOff();
+
+		processWs();
+
+			
 	}
 
 };
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+function retrieveCustDetails(relid) {
+	if (!window.openDatabase) {
+		alert('Databases are not supported in this browser.');
+		return;
+	}
+	
+	db.transaction(function(transaction) {
+		transaction.executeSql('SELECT * FROM User Where UserId = ' + relid, 
+				[],
+				function(transaction, result) {
+						
+					if (result != null && result.rows != null) {
+						var row = result.rows.item(0);
+						alert('sql callback ' + row.UserId);
+						custdetail.id 		= row.UserId;
+						//custdetail.sort		= customers[$(this).attr('rel')]['sort'];
+						custdetail.contactname		= row.contactname;
+						custdetail.city 	= row.city;
+						custdetail.phone1 	= row.phone1;
+						custdetail.email 	= row.email;
+						custdetail.longitude 	= row.city.longitude;
+						custdetail.latitude 	= row.city.latitude;
+						
+						$.mobile.changePage('#custdetail');
+
+					}
+				}
+				,
+				errorHandler
+				);
+		},errorHandler,listDbHandler);
+	return;
+}
+
+		
+function loadingOn() {
+	$.mobile.showPageLoadingMsg();
+}
+
+function loadingOff() {
+	$.mobile.hidePageLoadingMsg();
+}
 
 
 function waitOn() {
