@@ -1,15 +1,246 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title></title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
-<meta charset="utf-8">
-<script type="text/javascript" charset="utf-8" src="cordova.js"></script>
-<script type="text/javascript">
-     function onBodyLoad(){     
-        document.addEventListener("deviceready", onDeviceReady, false);
-     }
-     function onDeviceReady(){
-         window.location.href = 'http://www.treecommerce.com/app/index.html'
-     }
-</script>
+
+  <title>jQuery Mobile page</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/themes/TSD.css" />
+  <link rel="stylesheet" href="css/custom.css" />
+ <script src="jqm/jquery.js"></script>
+ <script src="jqm/jquery.jsonp.js"></script>
+  <link rel="stylesheet" href="jqm/jquery.mobile.structure-1.3.0.css" /> 
+  <script src="jqm/jquery.mobile-1.3.0.js"></script> 
+  <script type="text/javascript" src="cordova.js"></script> 
+  <script type="text/javascript" src="barcodescanner.js"></script>
+  <script type="text/javascript" src="childbrowser.js"></script>
+  
+   <script src="jq.js"></script> 
+
+</head>
+<body>
+<div data-role="page" id="hoofdmenu" data-theme="a" >
+	
+	<div data-role="header" style="height:40px;" data-position="fixed">
+		<h2>Main Menu</h2>
+		
+	</div><!-- /header -->
+
+	<div data-role="content" >	
+		
+		<p>Maak uw keuze</p>	
+		
+		<h3>Kies uit volgende pagina's</h3>
+		<p><a href="#subone" data-role="button" data-transition="slide" >Contact list</a></p>	
+		<p><a href="#subtwo" data-role="button" data-transition="slide" >Plantnames</a></p>	
+		<p><a href="#login" data-role="button" data-transition="slide" >Settings</a></p>	
+		<p><a href="#db" data-role="button" data-transition="slide" >dB</a></p>	
+		<p><a href="#barcode" data-role="button" data-transition="slide" >Barcodes</a></p>	
+		<br />
+		<p><a href="#" data-role="button" data-transition="slide" onClick="navigator.app.exitApp()">Exit</a></p>	
+		
+	</div><!-- /content -->
+	<div data-role="footer" data-theme="a" data-position="fixed">
+	</div><!-- /footer -->
+</div><!-- /page one -->
+
+<div data-role="page" id="db" data-theme="a" >
+	
+	<div data-role="header" style="height:40px;" data-position="fixed">
+		<a data-icon="arrow-l" href="#" data-rel="back">Back</a><h2>Settings</h2>
+	</div><!-- /header -->
+
+	<div data-role="content" data-theme="a">	
+		
+	<h1>WebSQL</h1>
+	<input id="txFirstName" type="text" placeholder="FirstName">
+	<input id="txLastName" type="text" placeholder="Last Name">
+	<input type="button" value="Add record" onClick="AddValueToDB()">
+	<input type="button" value="Refresh" onClick="ListDBValues()"> <br>
+	<input type="button" value="Clear" onClick="emptyCustDB()"> <br>
+	<br>
+	<span style="font-weight:bold;">Currently stored values:</span>
+	<span id="lbUsers"></span>
+
+	</div><!-- /content -->
+	
+</div><!-- / db -->
+
+<div data-role="page" id="barcode" data-theme="a" >
+	
+	<div data-role="header" style="height:40px;" data-position="fixed">
+		<a data-icon="arrow-l" href="#" data-rel="back">Back</a><h2>Settings</h2>
+	</div><!-- /header -->
+
+	<div data-role="content" data-theme="a">	
+		
+	<h1>Barcode Scanner</h1>
+	<input type="button" id="scan" value="Scan"> 
+	<p id="info"></p>
+	</div><!-- /content -->
+	
+</div><!-- / barcode -->
+
+
+
+
+
+<div data-role="page" id="login" data-theme="a" >
+	
+	<div data-role="header" style="height:40px;" data-position="fixed">
+		<a data-icon="arrow-l" href="#" data-rel="back">Back</a><h2>Settings</h2>
+	</div><!-- /header -->
+
+	<div data-role="content" data-theme="a">	
+		
+		<div data-role="fieldcontain">
+			<label for="username">Gebruikersnaam:</label>
+			<input id="username" type="text" name="username"  value="" /><br />
+		</div>
+		<div data-role="fieldcontain">
+			<label for="password">Wachtwoord:</label>
+			<input id="password" type="password" name="password"  value="" />
+		</div>
+		<div data-role="fieldcontain">
+			<label for="loginip">Webservice:</label>
+			<input id="loginip" name="loginip"  value="" />
+		</div>
+		<div data-role="fieldcontain">
+			<label for="proxy">Proxy:</label>
+			<input id="proxy" name="proxy"  value="" />
+			<button class="loginButton" value="Read ws">Save settings</button>
+		</div>
+		
+		<h2 id="settingsmsg"></h2>
+		
+		<h1>DeviceInfo:</h1>
+		<p id="deviceInfo"></p>
+
+	</div><!-- /content -->
+	
+</div><!-- / login -->
+<div data-role="page" id="custdetail" data-theme="a" >
+	
+	<div data-role="header" style="height:40px;" data-position="fixed">
+		<a data-icon="arrow-l" href="#" data-rel="back">Back</a><h2>Customer details</h2>
+	</div><!-- /header -->
+
+	<div data-role="content" data-theme="a">	
+		<div id="customerdetails">
+		</div>
+		<table>
+		    <tr>
+		        <td>ID:
+		        </td>
+		        <td><span id="customerid_t"></span>
+		        </td>
+		    </tr>
+		    <tr>
+		        <td>Name:
+		        </td>
+		        <td><span id="customersort_t"></span>
+		        </td>
+		    </tr>
+		    <tr>
+		        <td>City:
+		        </td>
+		        <td><span id="customercity_t"></span>
+		        </td>
+		    </tr>
+		    <tr>
+		        <td>Phone:
+		        </td>
+		        <td><a id="customerphone1"  data-role="button" data-icon="arrow-r" id="customeremail" href="#">Call</a>
+		        </td>
+		    </tr>
+		    <tr>
+		        <td>Send:
+		        </td>
+		        <td><a data-icon="arrow-r"  data-role="button" id="customeremail" href="#">Email</a>
+		        </td>
+		    </tr>
+		</table>
+<br /><br />
+		<img id="googlemap" src="" />
+
+	</div><!-- /content -->
+	
+</div><!-- / custdetail  -->
+
+<div data-role="page" id="subtwo" data-theme="a">
+
+	<div data-role="header" style="height:40px;" data-position="fixed">
+		<h2>Plantnames</h2>
+		
+	</div><!-- /header -->
+
+	<div data-role="content" data-theme="a">	
+
+			<ul data-role="listview" data-autodividers="true">
+				<li>Acer campestre<span style="float:right">6,55</span> <input type="text" name="name" id="basic" value="5" data-mini="true" /></li>
+				<li>Acer campestre 'Elsrijk'<span style="float:right">12,55</span></li>
+				<li>Abies alba<br />Regel 2<span style="float:right">16,99</span></li>
+				<li>Betula<span style="float:right">24,77</span></li>
+				<li>Betula pendula<span style="float:right">12,55</span></li>
+				<li>Betula pendula 'TSD'<span style="float:right">12,00</span></li>
+				<li>Banana tropicana<span style="float:right">3,50</span></li>
+				<li>Camillia campestre<span style="float:right">6,55</span> <input type="text" name="name" id="basic" value="5" data-mini="true" /></li>
+				<li>Camillia campestre 'Elsrijk'<span style="float:right">12,55</span></li>
+				<li>Camillia alba<br />Regel 2<span style="float:right">16,99</span></li>
+			</ul>
+		
+		
+	</div><!-- /content -->
+	
+	<div data-role="footer" data-position="fixed">
+		<div data-role="navbar">
+			<ul>
+				<li><a data-transition="slide" data-role="none" href="#subone" >Contacts</a></li>
+				<li><a data-transition="slide" data-role="none" href="#subtwo" class="ui-btn-active ui-state-persist">Plantnames</a></li>
+				<li><a data-transition="slide" data-role="none" href="#login">Settings</a></li>
+			</ul>
+		</div><!-- /navbar -->
+	</div><!-- /footer -->
+</div><!-- /page two -->
+
+
+<!-- Start of second page: #two -->
+
+<div data-role="page" id="subone" data-theme="a">
+
+	<div data-role="header" style="height:40px;" data-position="fixed">
+		<h2 id="headerteller">Contact list</h2>
+		
+	</div><!-- /header -->
+
+	<div data-role="content" data-theme="a">	
+			
+		<div data-role="fieldcontain">
+			<label for="input_search">Klantnaam:</label>
+			<input id="input_search" type="text" name="input_search"  value="" />
+			<button id="getws2" value="Read ws">Zoek</button>
+		</div>
+		
+		
+		<ul id="ul_klanten" data-role="listview" data-autodividers="true">
+			
+		</ul>
+	</div>
+	<div data-role="footer" data-position="fixed">
+		<div data-role="navbar">
+			<ul>
+				<li><a data-transition="slide" data-role="none" href="#subone" class="ui-btn-active ui-state-persist">Contacts</a></li>
+				<li><a data-transition="slide" data-role="none" href="#subtwo" >Plantnames</a></li>
+				<li><a data-transition="slide" data-role="none" href="#login">Settings</a></li>
+			</ul>
+		</div><!-- /navbar -->
+	</div><!-- /footer -->
+</div><!-- /page two -->
+<div id="waitbox" >
+<br /><br /><br /><br /><br />
+	<div id="waitboxmsg">
+	<h1 id="waitmsg"></h1>
+	</div>
+</div>
+</body>
+</html>
