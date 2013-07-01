@@ -4,7 +4,7 @@ guo_app.proxy = '';
 guo_app.loginusername = '';
 guo_app.loginpassword = '';
 guo_app.loginip = '';
-guo_app.maxrows = 2000;
+guo_app.maxrows = 5000;
 
 
 // global variables
@@ -315,7 +315,7 @@ function ListDBValues() {
 	// this next section will select all the content from the User table and then go through it row by row
 	// appending the UserId company city to the #lbUsers element on the page
 	db.transaction(function(transaction) {
-		transaction.executeSql('SELECT * FROM User ORDER by contactname LIMIT 100;', 
+		transaction.executeSql('SELECT * FROM User ORDER by contactname desc LIMIT 100;', 
 		[],
 		function(transaction, result) {
 			if (result != null && result.rows != null) {
@@ -331,7 +331,7 @@ function ListDBValues() {
 				$('#ul_klanten').trigger('create');    
 				$('#ul_klanten').listview('refresh');
 				waitOff();
-
+				
 				//alert('looped' + i);
 			}
 		},
