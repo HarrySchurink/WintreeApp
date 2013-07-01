@@ -202,31 +202,8 @@ function customerSearchResult(data) {
 		alert('Error: (' + data.errorno + ') ' +data.errortxt);
 	} else {
 		AddAllCustToDB(data);
-		return;
-		var teller = 0;
-		//emptyCustDB();
-		
-		$.each(data.row, function(index, item) {
-			customers[teller] = [];
-			customers[teller]['id'] = item.id;
-			customers[teller]['sort'] = item.sort;
-			customers[teller]['contactname'] = item.contactname;
-			customers[teller]['city'] = item.city;
-			customers[teller]['phone1'] = item.phone1;
-			customers[teller]['email'] = item.email;
-			customers[teller]['longitude'] = item.longitude;
-			customers[teller]['latitude'] = item.latitude;
-			AddCustToDB(item.contactname,  item.city)
-			html += '<li ><a class="custlink" data-transition="slide" rel="'+teller+'" href="#custdetail">'+item.contactname+ ' | ' + item.city + '</a></li>';
-			teller = teller + 1;
-		});
-//alert(teller);
-		$("#ul_klanten").empty();
-		$('#ul_klanten').append($(html));
-		$('#ul_klanten').trigger('create');    
-		$('#ul_klanten').listview('refresh');
 	}
-	waitOff();
+
 }
 
 
@@ -330,9 +307,9 @@ function ListDBValues() {
 				$('#ul_klanten').append($(html));
 				$('#ul_klanten').trigger('create');    
 				$('#ul_klanten').listview('refresh');
-				waitOff();
 				
 				//alert('looped' + i);
+				waitOff();
 			}
 		},
 		errorHandler);
@@ -395,6 +372,7 @@ function AddAllCustToDB(data) {
 		var teller = 0;
 		$.each(data.row, function(index, item) {
 			waitMsg('Start processing data' + teller);
+			//console.log(teller);
 			customers[teller] = [];
 			customers[teller]['id'] = item.id;
 			customers[teller]['sort'] = item.sort;
@@ -413,7 +391,6 @@ function AddAllCustToDB(data) {
 		
 		//alert('adsf');
 		ListDBValues();
-		
 	});
 	
 	 
@@ -444,6 +421,7 @@ function waitOn() {
 
 function waitOff() {
 	$('#waitbox').hide();
+	console.log('Klaar en wegweze');
 }
 
 function waitMsg(msg) {
