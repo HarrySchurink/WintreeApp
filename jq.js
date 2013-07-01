@@ -273,10 +273,16 @@ function onDeviceReady() {
 }
 function initGlobals() {
 	if (!window.localStorage.getItem("guo_app.loginip")) {
-		window.localStorage.setItem("guo_app.loginip", 'wstsd.wintreemobile.nl:4496/ws_tsd99/ws_AWC_sp_contacts_get');
+		window.localStorage.setItem("guo_app.loginip", 'wstsd.wintreemobile.nl:4496/ws_tsd99/DEVELOPER_ws_AWT_sp_');
 	}
 	if (!window.localStorage.getItem("guo_app.proxy")) {
 		window.localStorage.setItem("guo_app.proxy", 'https://www.treecommerce.net/WintreeApp/callback.php?callback=?');
+	}
+	if (!window.localStorage.getItem("guo_app.loginusername")) {
+		window.localStorage.setItem("guo_app.loginusername", 'hg');
+	}
+	if (!window.localStorage.getItem("guo_app.loginpassword")) {
+		window.localStorage.setItem("guo_app.loginpassword", 'FC59HL1');
 	}
 	guo_app.loginusername = window.localStorage.getItem("guo_app.loginusername")
 	guo_app.loginpassword = window.localStorage.getItem("guo_app.loginpassword")
