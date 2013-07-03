@@ -31,8 +31,8 @@
 		<p>Maak uw keuze</p>	
 		
 		<h3>Kies uit volgende pagina's</h3>
-		<p><a href="#subone" data-role="button" data-transition="slide" >Contact list</a></p>	
-		<p><a href="#subtwo" data-role="button" data-transition="slide" >Plantnames</a></p>	
+		<p><a href="#contacts" data-role="button" data-transition="slide" >Contact list</a></p>	
+		<p><a href="#selections" data-role="button" data-transition="slide" >Selections</a></p>	
 		<p><a href="#login" data-role="button" data-transition="slide" >Settings</a></p>	
 		<p><a href="#db" data-role="button" data-transition="slide" >dB</a></p>	
 		<p><a href="#barcode" data-role="button" data-transition="slide" >Barcodes</a></p>	
@@ -167,36 +167,30 @@
 	
 </div><!-- / custdetail  -->
 
-<div data-role="page" id="subtwo" data-theme="a">
+<div data-role="page" id="selections" data-theme="a">
 
 	<div data-role="header" style="height:40px;" data-position="fixed">
-		<h2>Plantnames</h2>
+		<h2>Selections</h2>
 		
 	</div><!-- /header -->
 
 	<div data-role="content" data-theme="a">	
-
-			<ul data-role="listview" data-autodividers="true">
-				<li>Acer campestre<span style="float:right">6,55</span> <input type="text" name="name" id="basic" value="5" data-mini="true" /></li>
-				<li>Acer campestre 'Elsrijk'<span style="float:right">12,55</span></li>
-				<li>Abies alba<br />Regel 2<span style="float:right">16,99</span></li>
-				<li>Betula<span style="float:right">24,77</span></li>
-				<li>Betula pendula<span style="float:right">12,55</span></li>
-				<li>Betula pendula 'TSD'<span style="float:right">12,00</span></li>
-				<li>Banana tropicana<span style="float:right">3,50</span></li>
-				<li>Camillia campestre<span style="float:right">6,55</span> <input type="text" name="name" id="basic" value="5" data-mini="true" /></li>
-				<li>Camillia campestre 'Elsrijk'<span style="float:right">12,55</span></li>
-				<li>Camillia alba<br />Regel 2<span style="float:right">16,99</span></li>
-			</ul>
+	
+		<button id="importsel" value="Read ws">Import selecties</button>
 		
+	<br /><br />
+
+		<ul id="ul_selections" data-role="listview" data-autodividers="true">
+			
+		</ul>
 		
 	</div><!-- /content -->
 	
 	<div data-role="footer" data-position="fixed">
 		<div data-role="navbar">
 			<ul>
-				<li><a data-transition="slide" data-role="none" href="#subone" >Contacts</a></li>
-				<li><a data-transition="slide" data-role="none" href="#subtwo" class="ui-btn-active ui-state-persist">Plantnames</a></li>
+				<li><a data-transition="slide" data-role="none" href="#contacts" >Contacts</a></li>
+				<li><a data-transition="slide" data-role="none" href="#selections" class="ui-btn-active ui-state-persist">Selections</a></li>
 				<li><a data-transition="slide" data-role="none" href="#login">Settings</a></li>
 			</ul>
 		</div><!-- /navbar -->
@@ -206,7 +200,7 @@
 
 <!-- Start of second page: #two -->
 
-<div data-role="page" id="subone" data-theme="a">
+<div data-role="page" id="contacts" data-theme="a">
 
 	<div data-role="header" style="height:40px;" data-position="fixed">
 		<h2 id="headerteller">Contact list</h2>
@@ -216,9 +210,9 @@
 	<div data-role="content" data-theme="a">	
 			
 		<div data-role="fieldcontain">
-			<label for="input_search">Klantnaam:</label>
-			<input id="input_search" type="text" name="input_search"  value="" />
-			<button id="getws2" value="Read ws">Zoek</button>
+			<label for="input_custsearch">Klantnaam:</label>
+			<input id="input_custsearch" type="text" name="input_search"  value="" />
+			<button id="searchcust" value="Read ws">Zoek</button>
 		</div>
 		
 		
@@ -229,8 +223,8 @@
 	<div data-role="footer" data-position="fixed">
 		<div data-role="navbar">
 			<ul>
-				<li><a data-transition="slide" data-role="none" href="#subone" class="ui-btn-active ui-state-persist">Contacts</a></li>
-				<li><a data-transition="slide" data-role="none" href="#subtwo" >Plantnames</a></li>
+				<li><a data-transition="slide" data-role="none" href="#contacts" class="ui-btn-active ui-state-persist">Contacts</a></li>
+				<li><a data-transition="slide" data-role="none" href="#selections" >Selections</a></li>
 				<li><a data-transition="slide" data-role="none" href="#login">Settings</a></li>
 			</ul>
 		</div><!-- /navbar -->

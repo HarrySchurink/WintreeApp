@@ -4,7 +4,7 @@ guo_app.proxy = '';
 guo_app.loginusername = '';
 guo_app.loginpassword = '';
 guo_app.loginip = '';
-guo_app.maxrows = 10000;
+guo_app.maxrows = 1000;
 
 
 // global variables
@@ -26,7 +26,13 @@ custdetail.longitude = '';
 custdetail.latitude = '';
 var customers = [];
 
-var alerten = 'N';
+//selectierecord
+var selection = new Object();
+selection.id = 0;
+selection.description = '';
+var current_selection = 0;
+
+var console_type = 'console';   //maak hier alert van om alle consol meldingen naar scherm te zetten (in app is console niet te benaderen)
 
 var transactionCount = 0;
 var transactionProcessing = 0;
@@ -113,8 +119,8 @@ $(document).ready(function() {
 		$('#proxy').val(guo_app.proxy);
 	});
 	$( '#custdetail' ).live( 'pagebeforeshow',function(event){
-		if (custdetail.id == 10 ) {
-			$.mobile.changePage('#subone');
+		if (custdetail.id == 0 ) {
+			$.mobile.changePage('#contacts');
 			return;
 		} else {
 		
@@ -134,6 +140,16 @@ $(document).ready(function() {
 		
 	});
 	
+	$( '#selections' ).live( 'pagebeforeshow',function(event){
+			ListDbSelections() ;
+	});
+
+
+	$("#ul_selections").on("click", ".selectionlink", function() { 
+		countContacts($(this).attr('rel'));
+		return false;
+	} );
+	
 	
 	$("#ul_klanten").on("click", ".custlink", function() { 
 		retrieveCustDetails($(this).attr('rel'));
@@ -150,24 +166,26 @@ $(document).ready(function() {
 		$('#settingsmsg').html('Safe succesfull');
 		//$.mobile.changePage('#hoofdmenu');
 	});
-
-	$("#getws").on( 'click',  function(event) {
-		callWebservice();
+      
+	$("#searchcust").on( 'click',  function(event) {
+//		countAndImportContacts();
+//		importSelections();
+//		countContacts();
+		ListDbContacts() ;
 	})
       
-	$("#getws2").on( 'click',  function(event) {
-		countWs();
+	$("#importsel").on( 'click',  function(event) {
+		importSelections();
 	})
 	
 	onDbLoad();
 	waitOff();
 })
-   
-
-function countWs() { 
-
-	console_log('countWs('+wscurpage+')');
-
+//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+function countContacts(ai_selection) { 
+	$('#input_custsearch').val('');
+	current_selection = ai_selection;
+	console_log('countAndImportContacts()');
 	var params = new Object();
 	//Algemene paramters (uit de settings dus)
 	params.loginip = guo_app.loginip;
@@ -178,7 +196,9 @@ function countWs() {
 	params.page = '1';
 	params.limit = '50';
 //	params.params = '?selection=228&ai_page=1&ai_limit='+guo_app.maxrows;
-	params.params = '?ai_page=1&ai_limit='+guo_app.maxrows;
+//	params.params = '?as_deviceid=HARRYTEST&selection='+ai_selection+'&ai_page=1&ai_limit='+guo_app.maxrows;
+	params.params = '?as_deviceid=HARRYTEST&ai_selection='+current_selection+'&ai_page=1&ai_limit='+guo_app.maxrows;
+	console_log(params.params);
 	//Omzettten naar json string
 	var jparams = JSON.stringify(params);
 	
@@ -192,85 +212,30 @@ function countWs() {
 		data: {'jsonparams':jparams},
 		dataType: "jsonp",
 		contentType: "application/json; charset=utf-8",
-		success : countWsCallback,
+		success : countContactsCb,
 		error: ajaxCallFailed,
 		failure: ajaxCallFailed
 	}); 
 } 
 
-function countWsCallback(data) {
-	console_log('countWsCallback()');
+function countContactsCb(data) {
+
+	buildDb('contacts');
+	console_log('countContactsCb()');
 	var row = data.row[0];
 	wsrowcount = row.rows;	
-	wspages = 5;
+	wspages = Math.ceil(wsrowcount/1000);
 	wspagesize = wsrowcount / wspages;
 	wspagesize = Math.ceil(wspagesize);
 	wscurpage = 1;
-	processWs();
+	importContacts();
 }
 
-/////////////////////////////////////////////////////////////////////////
-
-function processWs() { 
-	if (wscurpage > wspages) {
-		ListDBValues();
-		return;
-	}
-	console_log('processWs('+wscurpage+')');
-	var params = new Object();
-	//Algemene paramters (uit de settings dus)
-	params.loginip = guo_app.loginip;
-	params.loginusername = guo_app.loginusername;
-	params.loginpassword = guo_app.loginpassword;
-	params.commandid = 'contacts';
-	params.page = wscurpage;
-	params.limit = wspagesize;
-//	params.params = '?selection=228&ai_page=1&ai_limit='+guo_app.maxrows;
-	params.params = '?ai_page='+wscurpage+'&ai_limit='+wspagesize;
-	var jparams = JSON.stringify(params);
-	
-
-	//alert(guo_app.proxy);
-	waitOn();
-	waitMsg('Retrieving: ' + ( (wscurpage-1)  * (100 / wspages) )  +'-'  + ( wscurpage  * (100 / wspages) )  +'%');
-	$.ajax({
-		type: "get", 
-		url: guo_app.proxy,
-		data: {'jsonparams':jparams},
-		dataType: "jsonp",
-		contentType: "application/json; charset=utf-8",
-		success : processWsCallback,
-		error: ajaxCallFailed,
-		failure: ajaxCallFailed
-	}); 
-} 
-
-function processWsCallback(data) {
-
-	wscurpage = wscurpage + 1;
-
-	console_log('processWsCallback('+wscurpage+')');
-	
-	if ( wscurpage  <= wspages + 1) {
-		AddAllCustToDB(data);
-		
-	} else {
-
-		ListDBValues();
-		
-	}
-
-}
-
-
-function ajaxCallFailed(error) {
-	console_log('ajaxCallFailed()');
-	waitOff();
-}
 
 function onDeviceReady() {
 	initGlobals();
 }
+
 function initGlobals() {
 	if (!window.localStorage.getItem("guo_app.loginip")) {
 		window.localStorage.setItem("guo_app.loginip", 'wstsd.wintreemobile.nl:4496/ws_tsd99/DEVELOPER_ws_AWT_sp_');
@@ -289,7 +254,6 @@ function initGlobals() {
 	guo_app.loginip = window.localStorage.getItem("guo_app.loginip")
 	guo_app.proxy = window.localStorage.getItem("guo_app.proxy")
 	
-
 }
 
 function deviceInfo() {
@@ -316,35 +280,17 @@ function successCallBack() {
 	//alert("DEBUGGING: success");
 }
 
- 
 
-
- 
 // called when the application loads
 function onDbLoad(){
 	console_log('onDbLoad()');
-
-	 
-	// This alert is used to make sure the application is loaded correctly
-	// you can comment this out once you have the application working
-	//alert("DEBUGGING: we are in the onBodyLoad() function");
-	 
 	if (!window.openDatabase) {
-		// not all mobile devices support databases if it does not, thefollowing alert will display
-		// indicating the device will not be albe to run this application
 		alert('Databases are not supported in this browser.');
 		return;
 	}
 	 
 	db = openDatabase(shortName, version, displayName,maxSize);
-	 
-	db.transaction(function(tx){
-		tx.executeSql( 'DROP TABLE IF EXISTS User', [],sqlCallbackClear,errorHandler);
-		tx.executeSql( 'CREATE TABLE IF NOT EXISTS User(UserId INTEGER NOT NULL PRIMARY KEY, contactname TEXT NOT NULL, city TEXT NOT NULL, sort TEXT NOT NULL, phone1 TEXT NOT NULL, email TEXT NOT NULL, longitude TEXT NOT NULL, latitude TEXT NOT NULL)', [],sqlCallbackClear,errorHandler);
-		tx.executeSql( 'DELETE FROM User', [],sqlCallbackClear,errorHandler);
-
-		},errorHandler,successCallBack);
-	 
+		 
 }
 
 function sqlCallbackClear(){
@@ -353,25 +299,36 @@ function sqlCallbackClear(){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
  
-function ListDBValues() {
-	console_log('ListDBValues()');
+function ListDbContacts() {
+	console_log('ListDbContacts()');
 
 // list the values in the database to the screen using jquery to update the #lbUsers element
  
 	if (!window.openDatabase) {
-		alert('Databases are not supported in this browser.');
 		return;
 	}
 	
 	db.transaction(function(transaction) {
-		transaction.executeSql('SELECT * FROM User ORDER by contactname LIMIT 100;', 
+		var ls_where = ' 1 = 1 ';
+		
+		var ls_search = $('#input_custsearch').val();
+		if ( ls_search ) {
+			ls_search.replace(" ", "%");	
+			ls_where = ls_where + " AND ( contactname like '%" + ls_search + "%' or sort like '%" + ls_search + "%') ";
+		}
+		
+		
+		
+		var ls_sql = "SELECT * FROM contacts WHERE "+ls_where+" ORDER by contactname LIMIT 100;";
+		console_log(ls_sql);
+		transaction.executeSql(ls_sql, 
 		[],
 		function(transaction, result) {
 			if (result != null && result.rows != null) {
 				var html='';
 				for (var i = 0; i < result.rows.length; i++) {
 					var row = result.rows.item(i);
-					html += '<li ><a class="custlink" data-transition="slide" rel="'+row.UserId+'" href="#custdetail">'+row.contactname+ ' | ' + row.city + ' ['+row.UserId+']</a></li>';
+					html += '<li ><a class="custlink" data-transition="slide" rel="'+row.contactid+'" href="#custdetail">'+row.contactname+ ' | ' + row.city + ' ['+row.sort+']</a></li>';
 
 				}
 				$("#ul_klanten").empty();
@@ -382,87 +339,77 @@ function ListDBValues() {
 			}
 		},
 		errorHandler);
-		},errorHandler,listDbHandler);
+		},errorHandler,listDbContactsHandler);
 	return;
  
 }
 
-function listDbHandler(){
+function listDbContactsHandler(){
+	console_log('listDbContactsHandler' );
+	
 	waitOff();
-	console_log('listDbHandler()');
+	$.mobile.changePage('#contacts');
+
 };
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+function ListDbSelections() {
+	waitOn();
+	waitMsg('Retrieving selections');
+	console_log('ListDbContacts()');
 
-function AddAllCustToDB(data) {
-
-	console_log('AddAllCustToDB(start)');
+// list the values in the database to the screen using jquery to update the #lbUsers element
  
 	if (!window.openDatabase) {
-		alert('Databases are not supported in this browser.');
 		return;
 	}
-	 
 	
-	db.transaction(function(tx) {
+	db.transaction(function(transaction) {
+		transaction.executeSql('SELECT * FROM selections  WHERE selectionid > 0 ORDER by description;', 
+		[],
+		function(transaction, result) {
+			if (result != null && result.rows != null) {
+				var html='';
+				for (var i = 0; i < result.rows.length; i++) {
+					var row = result.rows.item(i);
+					html += '<li ><a class="selectionlink" data-transition="slide" rel="'+row.selectionid+'" href="#selectiondetail">'+row.description+  ' ['+row.selectionid+']</a></li>';
 
-		//var head = $("#headerteller");
-		waitMsg('Start processing data');
-		console_log('Start processing data');
-		transactionProcessing = 0;
-		$.each(data.row, function(index, item) {
-			transactionProcessing = transactionProcessing + 1;
-					
-			tx.executeSql('INSERT INTO User(UserId, contactname, city, sort, phone1, email, longitude, latitude)VALUES (?,?,?,?,?,?,?,?)',
-							[item.id, item.contactname, item.city, item.sort, item.phone1, item.email, item.longitude, item.latitude],
-							sqlCallbackSync,
-							errorHandler
-						);
-		});
-		
-		//alert('adsf');
-	});
-	
-	console_log('AddAllCustToDB(stop)');
- 
-	return false;
+				}
+				$("#ul_selections").empty();
+				$('#ul_selections').append($(html));
+				$('#ul_selections').trigger('create');    
+				$('#ul_selections').listview('refresh');
+				
+			}
+		},
+		errorHandler);
+		},errorHandler,listDbSelectionsHandler);
+	return;
  
 }
 
-function sqlCallbackSync(){
-	
-	//console_log('sqlCallbackSync()');
-	transactionProcessing = transactionProcessing - 1;
-	waitMsg('Processing data: ' + transactionProcessing);
-	
-	if (transactionProcessing == 0) {
-		waitOff();
-
-		processWs();
-
-			
-	}
-
+function listDbSelectionsHandler(){
+	waitOff();
 };
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
 function retrieveCustDetails(relid) {
 	if (!window.openDatabase) {
-		alert('Databases are not supported in this browser.');
 		return;
 	}
-	
+	console_log('retrieveCustDetails - '+relid);
 	db.transaction(function(transaction) {
-		transaction.executeSql('SELECT * FROM User Where UserId = ' + relid, 
+		transaction.executeSql('SELECT * FROM contacts Where contactid = ' + relid, 
 				[],
 				function(transaction, result) {
 						
 					if (result != null && result.rows != null) {
 						var row = result.rows.item(0);
-						custdetail.id 		= row.UserId;
+						custdetail.id 		= row.contactid;
 						//custdetail.sort		= customers[$(this).attr('rel')]['sort'];
 						custdetail.contactname		= row.contactname;
 						custdetail.city 	= row.city;
@@ -482,6 +429,229 @@ function retrieveCustDetails(relid) {
 	return;
 }
 
+function listDbHandler() {
+	console_log('listDbHandler()');
+}
+
+/////////////////////////////////////////////////////////////////////////
+
+function importContacts() { 
+	if (wscurpage > wspages) {
+		ListDbContacts();
+		return;
+	}
+	console_log('importContacts('+wscurpage+')');
+	var params = new Object();
+	//Algemene paramters (uit de settings dus)
+	params.loginip = guo_app.loginip;
+	params.loginusername = guo_app.loginusername;
+	params.loginpassword = guo_app.loginpassword;
+	params.commandid = 'contacts';
+	params.page = wscurpage;
+	params.limit = wspagesize;
+//	params.params = '?selection=228&ai_page=1&ai_limit='+guo_app.maxrows;
+	params.params = '?as_deviceid=HARRYTEST&ai_selection='+current_selection+'&ai_page='+wscurpage+'&ai_limit='+wspagesize;
+	var jparams = JSON.stringify(params);
+	
+
+	//alert(guo_app.proxy);
+	waitOn();
+	waitMsg('Retrieving: ' + ( (wscurpage-1)  * (100 / wspages) )  +'-'  + ( wscurpage  * (100 / wspages) )  +'%');
+	$.ajax({
+		type: "get", 
+		url: guo_app.proxy,
+		data: {'jsonparams':jparams},
+		dataType: "jsonp",
+		contentType: "application/json; charset=utf-8",
+		success : importContactsCallback,
+		error: ajaxCallFailed,
+		failure: ajaxCallFailed
+	}); 
+} 
+
+function importContactsCallback(data) {
+
+	wscurpage = wscurpage + 1;
+
+	console_log('importContactsCallback('+wscurpage+')');
+	
+	if ( wscurpage  <= wspages + 1) {
+		addAllContactsToDB(data);
+		
+	} else {
+
+		ListDbContacts();
+		
+	}
+
+}
+
+
+function addAllContactsToDB(data) {
+
+	console_log('addAllContactsToDB(start)');
+ 
+	if (!window.openDatabase) {
+		return;
+	}
+	 
+	
+	db.transaction(function(tx) {
+
+		//var head = $("#headerteller");
+		waitMsg('Start processing data');
+		console_log('Start processing data');
+		transactionProcessing = 0;
+		$.each(data.row, function(index, item) {
+			transactionProcessing = transactionProcessing + 1;
+					
+			tx.executeSql('INSERT INTO  contacts(contactid, contactname, city, sort, phone1, email, longitude, latitude)VALUES (?,?,?,?,?,?,?,?)',
+							[item.id, item.contactname, item.city, item.sort, item.phone1, item.email, item.longitude, item.latitude],
+							sqlCallbackImportContacts,
+							errorHandler
+						);
+		});
+		
+		//alert('adsf');
+	});
+	
+	console_log('addAllContactsToDB(stop)');
+ 
+	return false;
+ 
+}
+
+function sqlCallbackImportContacts(){
+	
+	//console_log('sqlCallbackImportContacts()');
+	transactionProcessing = transactionProcessing - 1;
+	waitMsg('Processing data: ' + transactionProcessing);
+	
+	if (transactionProcessing == 0) {
+//		waitOff();
+
+		importContacts();
+
+			
+	}
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////
+
+function importSelections() { 
+	
+	buildDb('selections');
+	
+	console_log('importSelections('+wscurpage+')');
+	var params = new Object();
+	//Algemene paramters (uit de settings dus)
+	params.loginip = guo_app.loginip;
+	params.loginusername = guo_app.loginusername;
+	params.loginpassword = guo_app.loginpassword;
+	params.commandid = 'selections_get';
+	params.page = wscurpage;
+	params.limit = wspagesize;
+//	params.params = '?selection=228&ai_page=1&ai_limit='+guo_app.maxrows;
+	var jparams = JSON.stringify(params);
+	
+
+	//alert(guo_app.proxy);
+	waitOn();
+	waitMsg('Retrieving selections: ');
+	$.ajax({
+		type: "get", 
+		url: guo_app.proxy,
+		data: {'jsonparams':jparams},
+		dataType: "jsonp",
+		contentType: "application/json; charset=utf-8",
+		success : importSelectionsCallback,
+		error: ajaxCallFailed,
+		failure: ajaxCallFailed
+	}); 
+} 
+
+function importSelectionsCallback(data) {
+
+	addAllSelectionsToDB(data);
+
+}
+
+function addAllSelectionsToDB(data) {
+
+	console_log('addAllSelectionsToDB(start)');
+ 
+	if (!window.openDatabase) {
+		return;
+	}
+	 
+	
+	db.transaction(function(tx) {
+
+		waitMsg('Start processing data');
+		console_log('Start processing data');
+		transactionProcessing = 0;
+		$.each(data.row, function(index, item) {
+			transactionProcessing = transactionProcessing + 1;
+					
+			tx.executeSql('INSERT INTO  selections(selectionid, description)VALUES (?,?)',
+							[item.id, item.description],
+							sqlCallbackImportSelections,
+							errorHandler
+						);
+		});
+		
+		//alert('adsf');
+	});
+	
+	return false;
+ 
+}
+
+function sqlCallbackImportSelections(){
+	
+	transactionProcessing = transactionProcessing - 1;
+	waitMsg('Processing data: ' + transactionProcessing);
+	
+	if (transactionProcessing == 0) {
+
+		ListDbSelections();
+			
+	}
+
+};
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+function ajaxCallFailed(error) {
+	console_log('ajaxCallFailed()');
+	alert('ajaxfail');
+	waitOff();
+}
+
+function buildDb(tablename) {
+	//opruimen oude data en opnieuw maken database
+	db.transaction(function(tx){
+		if (tablename == 'contacts' || tablename == '*all*') {
+			console_log('clearTable contacts');
+			tx.executeSql( 'DROP TABLE IF EXISTS contacts', [],sqlCallbackClear,errorHandler);
+			tx.executeSql( 'CREATE TABLE IF NOT EXISTS contacts(contactid INTEGER NOT NULL PRIMARY KEY, contactname TEXT NOT NULL, city TEXT NOT NULL, sort TEXT NOT NULL, phone1 TEXT NOT NULL, email TEXT NOT NULL, longitude TEXT NOT NULL, latitude TEXT NOT NULL)', [],sqlCallbackClear,errorHandler);
+			tx.executeSql( 'DELETE FROM contacts', [],sqlCallbackClear,errorHandler);
+		}
+		if (tablename == 'selections' || tablename == '*all*') {
+			console_log('clearTable selections');
+			tx.executeSql( 'DROP TABLE IF EXISTS selections', [],sqlCallbackClear,errorHandler);
+			tx.executeSql( 'CREATE TABLE IF NOT EXISTS selections(selectionid INTEGER NOT NULL PRIMARY KEY, description TEXT NOT NULL)', [],sqlCallbackClear,errorHandler);
+			tx.executeSql( 'DELETE FROM selections', [],sqlCallbackClear,errorHandler);
+		}
+
+	},errorHandler,successCallBack);
+		
+
+}
 		
 function waitOn() {
 	$('#waitbox').show();
@@ -499,7 +669,7 @@ function waitMsg(msg) {
 }
 
 function console_log(msg) {
-	if (alerten == 'J') {
+	if (console_type == 'alert') {
 		alert(msg);
 	} else {
 		console.log(msg);
